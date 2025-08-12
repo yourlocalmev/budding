@@ -67,16 +67,7 @@ async fn handle_tx(
         return;
     }
 
-    let signal = format!(
-    "{}|{}|{}|{}|{}|{}",
-    pool2,
-    to,
-    ethers::utils::format_ether(tx.value),
-    &calldata[..20],
-    tx.hash,
-    tx.from.unwrap_or_default()
-    );
-
+    let signal = build_signal(&tx, pool2, &calldata, &to);
     let sig_hash = H256::from(ethers::utils::keccak256(signal.as_bytes()));
     
     let royalty_bps = if tx.value > U256::exp10(18) { 500u64 } else { 1000u64 };
@@ -110,4 +101,20 @@ async fn handle_tx(
 
 fn tomb_abi() -> Abi {
     serde_json::from_str(include_str!("tomb_abi.json")).unwrap()
+}
+
+fn build_signal(tx: &Transaction, pool2: &str, calldata: &str, to: &str) -> String {
+    format!(
+        "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
+        pool2,
+        to,
+        ethers::utils::format_ether(tx.value),
+        &calldata[..20],
+        tx.hash,
+        tx.from.unwrap_or_default(),
+        tx.gas.unwrap_or_default(),
+        tx.gas_price.unwrap_or_default(),
+        tx.max_fee_per_gas.unwrap_or_default(),
+        tx.max_priority_fee_per_gas.unwrap_or_default()
+    )
 }
